@@ -5,6 +5,11 @@ import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Tactic.Linarith
 import FarkasLean.Alt1
 
+/-
+Proving Farkas Lemma Based on the theorem of the alternative in
+Alt1.Lean
+-/
+
 open Matrix
 
 namespace FarkasLemma

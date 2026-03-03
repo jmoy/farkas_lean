@@ -6,6 +6,14 @@ import Mathlib.Tactic.Linarith
 import FarkasLean.FourierMotzkin
 
 open Matrix
+/-
+A theorem of the alternative.
+
+Either Ax <= b has a solution, or
+y >=0, y'A = 0, y'b < 0 has a solution.
+
+We prove it using our Fourier-Motzkin elimination theorem.
+-/
 
 namespace FarkasLemma
 
