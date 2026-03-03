@@ -1,0 +1,7 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "lake": true,
+        "lean": true,
+        "mv": true
+    }
+}
