@@ -27,10 +27,10 @@ A is an m × n matrix.
 `vecMul y A` is vector-matrix multiplication (y^T A).
 -/
 
-def A1Primal {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) : Prop :=
+def Farkas1Primal {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) : Prop :=
   ∃ x : Fin n → F, A.mulVec x ≤  b
 
-def A1Dual {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) : Prop :=
+def Farkas1Dual {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) : Prop :=
   ∃ y : m → F, (∀ j, 0 ≤ y j) ∧ (y ᵥ* A = 0) ∧ (y ⬝ᵥ b < 0)
 
 /-!
@@ -38,8 +38,8 @@ def A1Dual {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) : Prop :=
 Matrix associativity makes this trivial compared to manual sums.
 -/
 
-theorem A1Exclusive {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) :
-    ¬(A1Primal A b ∧ A1Dual A b) := by
+theorem Farkas1Exclusive {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) :
+  ¬(Farkas1Primal A b ∧ Farkas1Dual A b) := by
   rintro ⟨⟨x, hAx⟩, ⟨y, hy, hyA, hyb⟩⟩
   have hyb_nonneg : 0 ≤ y ⬝ᵥ b := by
     have hdot_le : y ⬝ᵥ (A *ᵥ x) ≤ y ⬝ᵥ b := by
@@ -102,8 +102,8 @@ private theorem liftDual_of_fourierMotzkin {κ : Type*} [Fintype κ] {n : ℕ}
 ## Farkas' Lemma
 -/
 
-theorem A1Exhaust {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) :
-    A1Primal A b ∨ A1Dual A b := by
+theorem Farkas1Exhaust {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) :
+  Farkas1Primal A b ∨ Farkas1Dual A b := by
   induction n generalizing m b with
   | zero =>
       by_cases hb : 0 ≤ b
@@ -130,20 +130,20 @@ theorem A1Exhaust {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) :
           rw [hyb]
           exact hbi
   | succ n ih =>
-      by_cases hP : A1Primal A b
+      by_cases hP : Farkas1Primal A b
       · exact Or.inl hP
       · right
         rcases Fourier_Motzkin A b with ⟨κ, _, M, hM_nonneg, hM_last, hFM⟩
         let Ared : Matrix κ (Fin n) F := M * (A.submatrix id Fin.castSucc)
         let bred : κ → F := M.mulVec b
-        have hFM' : A1Primal A b ↔ A1Primal (m := κ) Ared bred := by
-          simpa [A1Primal, Ared, bred] using hFM
-        have hred_noPrimal : ¬ A1Primal (m := κ) Ared bred := by
+        have hFM' : Farkas1Primal A b ↔ Farkas1Primal (m := κ) Ared bred := by
+          simpa [Farkas1Primal, Ared, bred] using hFM
+        have hred_noPrimal : ¬ Farkas1Primal (m := κ) Ared bred := by
           intro h
           exact hP (hFM'.2 h)
-        have hred_exhaust : A1Primal (m := κ) Ared bred ∨ A1Dual (m := κ) Ared bred :=
+        have hred_exhaust : Farkas1Primal (m := κ) Ared bred ∨ Farkas1Dual (m := κ) Ared bred :=
           ih (m := κ) (A := Ared) (b := bred)
-        have hred_dual : A1Dual (m := κ) Ared bred := by
+        have hred_dual : Farkas1Dual (m := κ) Ared bred := by
           cases hred_exhaust with
           | inl h => exact False.elim (hred_noPrimal h)
           | inr h => exact h
@@ -151,7 +151,7 @@ theorem A1Exhaust {n : ℕ} (A : Matrix m (Fin n) F) (b : m → F) :
         have hMt_nonneg : ∀ i j, 0 ≤ (M.transpose) i j := by
           intro i j
           simpa [Matrix.transpose_apply] using hM_nonneg j i
-        have hdual_lift : A1Dual A b := by
+        have hdual_lift : Farkas1Dual A b := by
           refine ⟨M.transpose.mulVec y', ?_⟩
           simpa [Ared, bred] using
             (liftDual_of_fourierMotzkin A b M hM_last hMt_nonneg y' hy'_nonneg hy'_Ared hy'_bred)

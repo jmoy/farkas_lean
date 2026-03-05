@@ -3,7 +3,7 @@ import Mathlib.Data.Matrix.Mul
 import Mathlib.LinearAlgebra.Matrix.DotProduct
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Tactic.Linarith
-import FarkasLean.Alt1
+import FarkasLean.Farkas1
 
 /-
 Motzkin Transposition Theorem (Inhomogeneous Form)
@@ -23,7 +23,7 @@ Exactly one of the following systems has a solution:
             y0 ≥ 0 ∧ y ≥ 0 ∧ u ≥ 0 ∧ (y0 ≠ 0 ∨ y ≠ 0) ∧
             yᵀA + uᵀB + vᵀC = 0 ∧ y⋅a + u⋅b + v⋅c + y0 = 0
 
-We prove this by reduction to the Alt1 theorem.
+We prove this by reduction to the Farkas1 theorem.
 -/
 
 open Matrix
@@ -164,7 +164,7 @@ theorem motzkin_exclusive {n : ℕ} [IsStrictOrderedRing F]
 ## Exhaustiveness
 
 We homogenize the system by introducing a variable t and a slack variable s,
-then apply A1Exhaust to the augmented homogeneous system.
+then apply Farkas1Exhaust to the augmented homogeneous system.
 
 Variables: z = (x, t, s) : Fin (n+2) → F, where
   x = fun k => z (Fin.castSucc (Fin.castSucc k))   (the original n variables)
@@ -215,7 +215,7 @@ theorem motzkin_exhaustive {n : ℕ} [IsStrictOrderedRing F]
     | Sum.inr (Sum.inr (Sum.inr (Sum.inl _))) => 0
     | Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inl ())))) => 0
     | Sum.inr (Sum.inr (Sum.inr (Sum.inr (Sum.inr ())))) => -1
-  cases A1Exhaust E d with
+  cases Farkas1Exhaust E d with
   | inl hAltPrimal =>
     obtain ⟨z, hEz⟩ := hAltPrimal
     left

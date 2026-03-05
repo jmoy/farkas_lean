@@ -1,4 +1,4 @@
-import FarkasLean.Farkas
+import FarkasLean.Farkas2
 import FarkasLean.AlgebraHelpers
 import FarkasLean.Stiemke
 import FarkasLean.MotzkinTransposition
