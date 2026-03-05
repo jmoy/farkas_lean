@@ -1,8 +1,7 @@
 # Farkas Lean
 
-A Lean 4 / Mathlib formalization of several classical **theorems of the alternative** in linear programming, all proved via **Fourier–Motzkin elimination**.
+A Lean 4 / Mathlib formalization of several classical **theorems of the alternative** about linear inequalities,proved via **Fourier–Motzkin elimination**.
 
-The proof is complete — no `sorry` anywhere in the codebase.
 
 ## What is proved
 
@@ -19,14 +18,6 @@ the following holds:
 > **Dual** (`Farkas1Dual`): There exists a nonnegative dual certificate.
 > $$\exists\, y \ge 0,\quad y^T A = 0 \;\wedge\; y^T b < 0$$
 
-```lean
-theorem Farkas1Exclusive (A : Matrix m (Fin n) F) (b : m → F) :
-    ¬(Farkas1Primal A b ∧ Farkas1Dual A b)
-
-theorem Farkas1Exhaust (A : Matrix m (Fin n) F) (b : m → F) :
-    Farkas1Primal A b ∨ Farkas1Dual A b
-```
-
 This is the core result; everything else reduces to it.
 
 ---
@@ -41,14 +32,6 @@ the following holds:
 
 > **Dual** (`HasDualCert2`): There is a separating dual certificate.
 > $$\exists\, y,\quad y^T A \ge 0 \;\wedge\; y^T b < 0$$
-
-```lean
-theorem farkas2_exclusive (A : Matrix m (Fin n) F) (b : m → F) :
-    ¬(InCone2 A b ∧ HasDualCert2 A b)
-
-theorem farkas2_exhaustive (A : Matrix m (Fin n) F) (b : m → F) :
-    InCone2 A b ∨ HasDualCert2 A b
-```
 
 ---
 
@@ -66,18 +49,6 @@ exactly one of the following holds:
 > `u ≥ 0`, `v` (unrestricted), with `(y0, y) ≠ 0`, satisfying
 > $$y^T A + u^T B + v^T C = 0 \;\wedge\; y \cdot a + u \cdot b + v \cdot c + y_0 = 0$$
 
-```lean
-theorem motzkin_exclusive
-    (A : Matrix p (Fin n) F) (B : Matrix q (Fin n) F)
-    (C : Matrix r (Fin n) F) (a : p → F) (b : q → F) (c : r → F) :
-    ¬(MotzkinPrimal A B C a b c ∧ MotzkinDual A B C a b c)
-
-theorem motzkin_exhaustive
-    (A : Matrix p (Fin n) F) (B : Matrix q (Fin n) F)
-    (C : Matrix r (Fin n) F) (a : p → F) (b : q → F) (c : r → F) :
-    MotzkinPrimal A B C a b c ∨ MotzkinDual A B C a b c
-```
-
 ---
 
 ### 4. Stiemke's Lemma (`FarkasLean.Stiemke`)
@@ -91,14 +62,6 @@ For a matrix `A : Matrix m (Fin n) F`, exactly one of the following holds:
 > **Dual** (`StiemkeDual`): There is a nonneg nonzero covector in the image
 > of `Aᵀ`.
 > $$\exists\, y,\quad y^T A \ge 0 \;\wedge\; y^T A \ne 0$$
-
-```lean
-theorem stiemke_exclusive (A : Matrix m (Fin n) F) :
-    ¬(StiemkePrimal A ∧ StiemkeDual A)
-
-theorem stiemke_exhaustive (A : Matrix m (Fin n) F) :
-    StiemkePrimal A ∨ StiemkeDual A
-```
 
 ---
 
@@ -125,31 +88,10 @@ finite type `κ`, a nonneg row-combination matrix `M`, and an equivalence
 between the original system and the projected system `(MA)x' ≤ Mb` in `n`
 variables, with the last column of `MA` equal to zero.
 
-**The construction.**  Rows of `A` are partitioned by the sign of the
-coefficient of the last variable `xₙ`:
-- *Positive rows* (`Aᵢₙ > 0`): each gives an upper bound
-  `xₙ ≤ (bᵢ − Aᵢ₀ₙ₋₁ · x') / Aᵢₙ`.
-- *Negative rows* (`Aᵢₙ < 0`): each gives a lower bound.
-- *Zero rows* (`Aᵢₙ = 0`): already independent of `xₙ`.
-
-The projected system has one row for every positive–negative pair (encoding
-the constraint that the upper bound of that pair exceeds the lower bound),
-plus one row for each zero row.  The matrix `M` records the scaling
-coefficients `1/Aᵢₙ` and `-1/Aᵢₙ`.  Backward feasibility uses
-`finite_bounds_witness`, a small lemma that finds an element lying between
-any finite family of lower and upper bounds in a lattice, provided all lowers
-are ≤ all uppers.
 
 ### Farkas' Lemma Form 1 by induction (`FarkasLean.Farkas1`)
 
-`Farkas1Exhaust` is proved by induction on the number of columns `n`:
-
-- **Base case `n = 0`**: `Ax ≤ b` trivially holds with `x = 0` iff `b ≥ 0`;
-  otherwise a unit dual certificate witnessing the violated component exists.
-- **Inductive step**: Apply `Fourier_Motzkin` to project to `n` variables.
-  Either the projected system is primal feasible (lift back) or by the IH it
-  has a dual certificate; the latter is then lifted to the original system
-  using the nonneg matrix `M`.
+`Farkas1Exhaust` is proved by induction on the number of columns `n` using Fourier-Motzkin elimination for the reduction.
 
 ### Farkas' Lemma Form 2 (`FarkasLean.Farkas2`)
 
@@ -198,50 +140,16 @@ Mathlib 4 already contains `Mathlib.LinearAlgebra.Farkas`, which proves
 Farkas' lemma using **topological separation** (the Hahn–Banach theorem or
 geometric form of separation in locally convex spaces).  That approach works
 naturally over `ℝ` (or any `RCLike` field) but invokes real-analysis
-machinery.
-
-This development takes a different route:
-
-| Aspect | This project | Mathlib |
-|---|---|---|
-| **Proof technique** | Fourier–Motzkin elimination (algorithmic/combinatorial) | Topological separation / Hahn–Banach |
-| **Field** | Any `[Field F] [LinearOrder F] [IsStrictOrderedRing F]` | Primarily `ℝ` / `RCLike` |
-| **Decidability** | Constructive where possible | Classical |
-| **Scope** | Farkas (two forms), Motzkin, Stiemke | Mainly one form of Farkas |
-| **Method** | Strong induction on number of variables | Functional-analytic |
-
-Working over an arbitrary ordered field (which includes `ℚ`, `ℝ`, any
-ordered number field, or any finite field extension with a compatible order)
-makes the results purely algebraic and gives them a wider range of
-applicability, e.g. to rational LP, exact arithmetic, or computer-algebra
-settings.
+machinery. This development takes a different route
+Working over an arbitrary ordered field (thus applying for eg. to `ℚ`) we provide a purely algebraic, inductive, proof.
 
 ---
 
-## Building
-
-The project uses [Mathlib v4.28.0](https://github.com/leanprover-community/mathlib4).
-
-```bash
-lake exe cache get   # download prebuilt Mathlib cache
-lake build           # build the project
-```
-
----
-
-## Module overview
-
-| File | Contents |
-|---|---|
-| `FarkasLean/AlgebraHelpers.lean` | Auxiliary lemmas on dot products, scalar inverses, and bound extraction from linear inequalities |
-| `FarkasLean/FourierMotzkin.lean` | `Fourier_Motzkin`: one-step variable elimination with nonneg combination matrix |
-| `FarkasLean/Farkas1.lean` | `Farkas1Exclusive`, `Farkas1Exhaust`: Farkas' lemma for `Ax ≤ b` |
-| `FarkasLean/Farkas2.lean` | `farkas2_exclusive`, `farkas2_exhaustive`: cone-membership form of Farkas |
-| `FarkasLean/MotzkinTransposition.lean` | `motzkin_exclusive`, `motzkin_exhaustive`: Motzkin's theorem for mixed constraint systems |
-| `FarkasLean/Stiemke.lean` | `stiemke_exclusive`, `stiemke_exhaustive`: Stiemke's lemma for strictly positive kernel vectors |
-
----
-
+Author: Jyotirmoy Bhattacharya
 https://jyotirmoy.net
 jyotirmoy@jyotirmoy.net
+
+I wrote this to teach myself Lean. 
+
+While the high-level data and proof structures were chosen by me, the smaller lemmas were all proved by Claude 4.6 Sonnet/Opus and GPT-5.3-codex and for these lemmas I've not tried to optimize the proofs. So this may not be the best example to learn lean from.
 
